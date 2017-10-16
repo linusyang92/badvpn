@@ -32,7 +32,7 @@
 
 #include "BLog.h"
 
-#ifdef __ANDROID__
+#ifdef ANDROID
 #include <android/log.h>
 #endif
 
@@ -55,7 +55,7 @@ static char *level_names[] = { NULL, "ERROR", "WARNING", "NOTICE", "INFO", "DEBU
 
 static void stdout_log (int channel, int level, const char *msg)
 {
-#ifndef __ANDROID__
+#ifndef ANDROID
     fprintf(stdout, "%s(%s): %s\n", level_names[level], blog_global.channels[channel].name, msg);
 #else
     __android_log_print(ANDROID_LOG_DEBUG, "tun2socks", 
@@ -65,7 +65,7 @@ static void stdout_log (int channel, int level, const char *msg)
 
 static void stderr_log (int channel, int level, const char *msg)
 {
-#ifndef __ANDROID__
+#ifndef ANDROID
     fprintf(stderr, "%s(%s): %s\n", level_names[level], blog_global.channels[channel].name, msg);
 #else
     __android_log_print(ANDROID_LOG_ERROR, "tun2socks", 

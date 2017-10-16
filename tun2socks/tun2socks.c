@@ -70,7 +70,7 @@
 
 #include <generated/blog_channel_tun2socks.h>
 
-#ifdef __ANDROID__
+#ifdef ANDROID
 
 #include <ancillary.h>
 
@@ -193,7 +193,7 @@ struct {
     int udpgw_max_connections;
     int udpgw_connection_buffer_size;
     int udpgw_transparent_dns;
-#ifdef __ANDROID__
+#ifdef ANDROID
     int tun_fd;
     int tun_mtu;
     int fake_proc;
@@ -293,7 +293,7 @@ LinkedList1 tcp_clients;
 // number of clients
 int num_clients;
 
-#ifdef __ANDROID__
+#ifdef ANDROID
 // Address of dnsgw
 BAddr dnsgw;
 void terminate (void);
@@ -337,7 +337,7 @@ static int client_socks_recv_send_out (struct tcp_client *client);
 static err_t client_sent_func (void *arg, struct tcp_pcb *tpcb, u16_t len);
 static void udpgw_client_handler_received (void *unused, BAddr local_addr, BAddr remote_addr, const uint8_t *data, int data_len);
 
-#ifdef __ANDROID__
+#ifdef ANDROID
 static void daemonize(const char* path) {
 
     /* Our process ID and Session ID */
@@ -450,7 +450,7 @@ int main (int argc, char **argv)
 
     BLog(BLOG_NOTICE, "initializing "GLOBAL_PRODUCT_NAME" "PROGRAM_NAME" "GLOBAL_VERSION);
 
-#ifdef __ANDROID__
+#ifdef ANDROID
     if (options.pid) {
         daemonize(options.pid);
     }
@@ -489,7 +489,7 @@ int main (int argc, char **argv)
         goto fail2;
     }
 
-#ifdef __ANDROID__
+#ifdef ANDROID
     // use supplied file descriptor
 
     int sock, fd;
@@ -652,7 +652,7 @@ int main (int argc, char **argv)
         netif_remove(&the_netif);
     }
 
-#ifdef __ANDROID__
+#ifdef ANDROID
     BLog(BLOG_NOTICE, "Free TCP connections");
     tcp_remove(tcp_bound_pcbs);
     tcp_remove(tcp_active_pcbs);
@@ -716,7 +716,7 @@ void print_help (const char *name)
         #endif
         "        [--loglevel <0-5/none/error/warning/notice/info/debug>]\n"
         "        [--channel-loglevel <channel-name> <0-5/none/error/warning/notice/info/debug>] ...\n"
-#ifdef __ANDROID__
+#ifdef ANDROID
         "        [--fake-proc]\n"
         "        [--tunfd <fd>]\n"
         "        [--tunmtu <mtu>]\n"
@@ -734,7 +734,7 @@ void print_help (const char *name)
         "        [--password <password>]\n"
         "        [--password-file <file>]\n"
         "        [--append-source-to-username]\n"
-#ifdef __ANDROID__
+#ifdef ANDROID
         "        [--enable-udprelay]\n"
         "        [--udprelay-max-connections <number>]\n"
 #else
@@ -770,7 +770,7 @@ int parse_arguments (int argc, char *argv[])
     for (int i = 0; i < BLOG_NUM_CHANNELS; i++) {
         options.loglevels[i] = -1;
     }
-#ifdef __ANDROID__
+#ifdef ANDROID
     options.tun_fd = -1;
     options.tun_mtu = 1500;
     options.fake_proc = 0;
@@ -868,7 +868,7 @@ int parse_arguments (int argc, char *argv[])
             options.loglevels[channel] = loglevel;
             i += 2;
         }
-#ifdef __ANDROID__
+#ifdef ANDROID
         else if (!strcmp(arg, "--fake-proc")) {
             options.fake_proc = 1;
         }
@@ -987,7 +987,7 @@ int parse_arguments (int argc, char *argv[])
         else if (!strcmp(arg, "--append-source-to-username")) {
             options.append_source_to_username = 1;
         }
-#ifdef __ANDROID__
+#ifdef ANDROID
         else if (!strcmp(arg, "--enable-udprelay")) {
             options.udpgw_remote_server_addr = "0.0.0.0:0";
 #else
@@ -1000,7 +1000,7 @@ int parse_arguments (int argc, char *argv[])
             i++;
 #endif
         }
-#ifdef __ANDROID__
+#ifdef ANDROID
         else if (!strcmp(arg, "--udprelay-max-connections")) {
 #else
         else if (!strcmp(arg, "--udpgw-max-connections")) {
@@ -1015,7 +1015,7 @@ int parse_arguments (int argc, char *argv[])
             }
             i++;
         }
-#ifndef __ANDROID__
+#ifndef ANDROID
         else if (!strcmp(arg, "--udpgw-connection-buffer-size")) {
             if (1 >= argc - i) {
                 fprintf(stderr, "%s: requires an argument\n", arg);
@@ -1137,7 +1137,7 @@ int process_arguments (void)
     // resolve remote udpgw server address
     if (options.udpgw_remote_server_addr) {
         if (!BAddr_Parse2(&udpgw_remote_server_addr, options.udpgw_remote_server_addr, NULL, 0, 0)) {
-#ifdef __ANDROID__
+#ifdef ANDROID
             BLog(BLOG_ERROR, "udprelay server addr: BAddr_Parse2 failed");
 #else
             BLog(BLOG_ERROR, "remote udpgw server addr: BAddr_Parse2 failed");
@@ -1146,7 +1146,7 @@ int process_arguments (void)
         }
     }
 
-#ifdef __ANDROID__
+#ifdef ANDROID
     // resolve dnsgw addr
     if (options.dnsgw) {
         if (!BAddr_Parse2(&dnsgw, options.dnsgw, NULL, 0, 0)) {
@@ -2122,7 +2122,7 @@ void udpgw_client_handler_received (void *unused, BAddr local_addr, BAddr remote
 
     switch (local_addr.type) {
         case BADDR_TYPE_IPV4: {
-#ifdef __ANDROID__
+#ifdef ANDROID
             BLog(BLOG_INFO, "UDP: from udprelay %d bytes", data_len);
 #else
             BLog(BLOG_INFO, "UDP: from udpgw %d bytes", data_len);
@@ -2165,14 +2165,14 @@ void udpgw_client_handler_received (void *unused, BAddr local_addr, BAddr remote
         } break;
 
         case BADDR_TYPE_IPV6: {
-#ifdef __ANDROID__
+#ifdef ANDROID
             BLog(BLOG_INFO, "UDP/IPv6: from udprelay %d bytes", data_len);
 #else
             BLog(BLOG_INFO, "UDP/IPv6: from udpgw %d bytes", data_len);
 #endif
 
             if (!options.netif_ip6addr) {
-#ifdef __ANDROID__
+#ifdef ANDROID
                 BLog(BLOG_ERROR, "got IPv6 packet from udprelay but IPv6 is disabled");
 #else
                 BLog(BLOG_ERROR, "got IPv6 packet from udpgw but IPv6 is disabled");
